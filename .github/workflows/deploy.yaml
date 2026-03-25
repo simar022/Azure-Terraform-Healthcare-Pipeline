@@ -41,5 +41,5 @@ jobs:
             docker pull ${{ secrets.DOCKER_USERNAME }}/new-healthcare-backend:latest
             docker pull ${{ secrets.DOCKER_USERNAME }}/new-healthcare-frontend:latest
 
-            kubectl rollout restart deployment/healthcare-app
-            kubectl rollout status deployment/healthcare-app
+            minikube kubectl -- rollout restart deployment/healthcare-app
+            minikube kubectl -- rollout status deployment/healthcare-app
