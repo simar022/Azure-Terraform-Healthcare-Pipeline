@@ -1,0 +1,13 @@
+# Ignore the terraform provider binaries
+**/.terraform/
+
+# Ignore the state files (contains secrets/sensitive data)
+*.tfstate
+*.tfstate.*
+
+# Ignore lock files if you prefer
+.terraform.lock.hcl
+
+# Ignore variable files that might have passwords
+*.tfvars
+*.tfvars.json

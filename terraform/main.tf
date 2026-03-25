@@ -3,6 +3,14 @@ resource "azurerm_resource_group" "rg" {
   location = var.location
 }
 
+resource "azurerm_public_ip" "vm_ssh_ip" {
+  name                = "healthcare-vm-ssh-ip"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Static"
+  sku                 = "Standard"
+}
+
 resource "azurerm_virtual_network" "vnet" {
   name                = "healthcare-vnet"
   address_space       = ["10.0.0.0/16"]
@@ -17,6 +25,7 @@ resource "azurerm_subnet" "subnet" {
   address_prefixes     = ["10.0.2.0/24"]
 }
 
+
 resource "azurerm_network_interface" "nic" {
   name                = "healthcare-nic"
   location            = azurerm_resource_group.rg.location
@@ -26,6 +35,7 @@ resource "azurerm_network_interface" "nic" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.subnet.id
     private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.vm_ssh_ip.id # Mapping the IP here
   }
 }
 
