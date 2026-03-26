@@ -21,21 +21,19 @@ The system is built on a **"Cloud-Native"** philosophy, ensuring that each compo
 
 ## 🛠️ Technology Stack
 
-* **Layer**	    |   **Technology**
+* Cloud  -->  Microsoft Azure
 
-* Cloud         |   Microsoft Azure
+* IaC  -->  Terraform
 
-* IaC           |   Terraform
+* Orchestration  -->  Kubernetes (Minikube)
 
-* Orchestration | 	Kubernetes (Minikube)
+* Backend  -->  Python 3.11 (Flask), Psycopg2
 
-* Backend       |   Python 3.11 (Flask), Psycopg2
+* Frontend  -->  HTML5, Bootstrap 5, Chart.js, Vanilla JS
 
-* Frontend      |   HTML5, Bootstrap 5, Chart.js, Vanilla JS
+* Database  -->  PostgreSQL 15
 
-* Database      |   PostgreSQL 15
-
-* CI/CD	        |   GitHub Actions, Docker Hub
+* CI/CD  -->  GitHub Actions, Docker Hub
 
 ---
 
