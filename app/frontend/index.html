@@ -3,124 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HealthSync | Professional Dashboard</title>
+    <title>HealthSync Pro | Enterprise Dashboard</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        .sidebar { height: 100vh; background: #2c3e50; color: white; position: fixed; width: 250px; }
-        .main-content { margin-left: 250px; padding: 30px; }
-        .card { border: none; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .status-indicator { height: 10px; width: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
-        .bg-online { background-color: #2ecc71; }
-        .bg-offline { background-color: #e74c3c; }
+        :root { --sidebar-bg: #1e293b; --accent-blue: #3b82f6; }
+        body { background-color: #f1f5f9; font-family: 'Inter', sans-serif; overflow-x: hidden; }
+        .sidebar { height: 100vh; width: 260px; position: fixed; background: var(--sidebar-bg); color: #fff; transition: 0.3s; }
+        .main-content { margin-left: 260px; padding: 2rem; transition: 0.3s; }
+        .card { border: none; border-radius: 12px; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-5px); }
+        .status-badge { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+        .pulse { animation: pulse-animation 2s infinite; }
+        @keyframes pulse-animation { 0% { box-shadow: 0 0 0 0px rgba(34, 197, 94, 0.4); } 100% { box-shadow: 0 0 0 10px rgba(34, 197, 94, 0); } }
     </style>
 </head>
 <body>
 
-<div class="sidebar d-flex flex-column p-3">
-    <h3 class="mb-4"><i class="fas fa-heartbeat me-2"></i>HealthSync</h3>
-    <ul class="nav nav-pills flex-column mb-auto">
-        <li class="nav-item"><a href="#" class="nav-link active"><i class="fas fa-home me-2"></i>Dashboard</a></li>
-        <li><a href="#" class="nav-link text-white"><i class="fas fa-user-injured me-2"></i>Patients</a></li>
-        <li><a href="#" class="nav-link text-white"><i class="fas fa-calendar-check me-2"></i>Appointments</a></li>
-    </ul>
-    <hr>
-    <div class="small">
-        <span id="system-status-dot" class="status-indicator bg-offline"></span>
-        System: <span id="system-status-text">Connecting...</span>
+<div class="sidebar d-flex flex-column p-4">
+    <h4 class="mb-5 text-primary fw-bold"><i class="fa-solid fa-stethoscope me-2"></i>HealthSync</h4>
+    <nav class="nav flex-column gap-2">
+        <a class="nav-link text-white active bg-primary rounded" href="#"><i class="fa-solid fa-chart-line me-2"></i> Overview</a>
+        <a class="nav-link text-white-50" href="#"><i class="fa-solid fa-user-group me-2"></i> Patients</a>
+        <a class="nav-link text-white-50" href="#"><i class="fa-solid fa-calendar-days me-2"></i> Schedule</a>
+    </nav>
+    <div class="mt-auto pt-4 border-top border-secondary">
+        <div class="d-flex align-items-center gap-2">
+            <div id="status-dot" class="status-badge bg-danger"></div>
+            <small id="status-text" class="text-white-50">Backend Offline</small>
+        </div>
     </div>
 </div>
 
 <div class="main-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2>Hospital Management Overview</h2>
-        <button class="btn btn-primary" onclick="loadDashboardData()"><i class="fas fa-sync me-2"></i>Refresh Data</button>
+    <header class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h1 class="h3 fw-bold">Medical Analytics Dashboard</h1>
+            <p class="text-muted">Real-time patient monitoring via Azure ALB</p>
+        </div>
+        <div class="d-flex gap-3">
+            <div class="bg-white p-2 rounded shadow-sm px-3">
+                <small class="text-muted d-block">Server Time</small>
+                <strong id="live-clock">00:00:00</strong>
+            </div>
+        </div>
+    </header>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-8">
+            <div class="card p-4 shadow-sm h-100">
+                <h5 class="fw-bold mb-4">Patient Condition Distribution</h5>
+                <canvas id="conditionChart" height="100"></canvas>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card p-4 shadow-sm h-100 bg-primary text-white">
+                <h5 class="fw-bold mb-3">System Health</h5>
+                <div class="display-6 fw-bold mb-2">99.8%</div>
+                <p class="small">All services operational across Minikube nodes.</p>
+                <div class="progress bg-white bg-opacity-25" style="height: 8px;">
+                    <div class="progress-bar bg-white" style="width: 99.8%"></div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card p-3 bg-white text-dark">
-                <h5>Total Patients</h5>
-                <h2 id="count-patients">0</h2>
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <div class="p-4 d-flex justify-content-between align-items-center border-bottom">
+                <h5 class="fw-bold mb-0">Live Patient Directory</h5>
+                <input type="text" id="tableSearch" class="form-control w-25" placeholder="Search patients...">
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card p-3 bg-white text-dark">
-                <h5>Critical Cases</h5>
-                <h2 class="text-danger" id="count-critical">0</h2>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Patient ID</th>
+                            <th>Name</th>
+                            <th>Status</th>
+                            <th>Admission Date</th>
+                            <th class="text-end pe-4">Metrics</th>
+                        </tr>
+                    </thead>
+                    <tbody id="patientTable">
+                        </tbody>
+                </table>
             </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card p-3 bg-white text-dark">
-                <h5>Active Appointments</h5>
-                <h2>12</h2>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-header bg-white">
-            <h5 class="mb-0">Recent Patient Entries (Live from DB)</h5>
-        </div>
-        <div class="table-responsive p-3">
-            <table class="table table-hover">
-                <thead class="table-light">
-                    <tr>
-                        <th>ID</th>
-                        <th>Patient Name</th>
-                        <th>Condition</th>
-                        <th>Admitted At</th>
-                        <th>Action</th>
-                    </tr>
-                </thead>
-                <tbody id="patient-table-body">
-                    <tr><td colspan="5" class="text-center">Loading database records...</td></tr>
-                </tbody>
-            </table>
         </div>
     </div>
 </div>
 
 <script>
     const ALB_IP = window.location.hostname;
-    const API_BASE = `http://${ALB_IP}:31000/api`;
+    const API_URL = `http://${ALB_IP}:31000/api`;
+    let conditionChart;
 
-    async function loadDashboardData() {
+    // 1. Live Clock
+    setInterval(() => {
+        document.getElementById('live-clock').innerText = new Date().toLocaleTimeString();
+    }, 1000);
+
+    // 2. Fetch Data & Update UI
+    async function updateDashboard() {
         try {
-            const response = await fetch(`${API_BASE}/patients`);
-            const patients = await response.json();
-            
-            const tableBody = document.getElementById('patient-table-body');
-            tableBody.innerHTML = '';
-            
-            let criticalCount = 0;
+            const response = await fetch(`${API_URL}/patients`);
+            if (!response.ok) throw new Error('Backend error');
+            const data = await response.json();
 
-            patients.forEach(p => {
-                if(p.condition.toLowerCase() === 'critical') criticalCount++;
-                tableBody.innerHTML += `
-                    <tr>
-                        <td>#${p.id}</td>
-                        <td><strong>${p.name}</strong></td>
-                        <td><span class="badge ${p.condition === 'Critical' ? 'bg-danger' : 'bg-success'}">${p.condition}</span></td>
-                        <td>${new Date(p.admitted_at).toLocaleString()}</td>
-                        <td><button class="btn btn-sm btn-outline-primary">View File</button></td>
-                    </tr>
-                `;
-            });
-
-            document.getElementById('count-patients').innerText = patients.length;
-            document.getElementById('count-critical').innerText = criticalCount;
-            document.getElementById('system-status-dot').className = 'status-indicator bg-online';
-            document.getElementById('system-status-text').innerText = 'Online';
-
+            updateTable(data);
+            updateChart(data);
+            updateStatus(true);
         } catch (err) {
-            console.error("Fetch error:", err);
-            document.getElementById('system-status-text').innerText = 'Backend Unreachable';
+            updateStatus(false);
+            console.error("Connectivity Issue:", err);
         }
     }
 
-    window.onload = loadDashboardData;
+    function updateStatus(online) {
+        const dot = document.getElementById('status-dot');
+        const text = document.getElementById('status-text');
+        dot.className = online ? 'status-badge bg-success pulse' : 'status-badge bg-danger';
+        text.innerText = online ? 'Backend Online' : 'Backend Offline';
+    }
+
+    function updateTable(patients) {
+        const tbody = document.getElementById('patientTable');
+        tbody.innerHTML = patients.map(p => `
+            <tr>
+                <td class="ps-4 text-muted">#PAT-${p.id}</td>
+                <td><div class="fw-bold">${p.name}</div></td>
+                <td><span class="badge rounded-pill ${p.condition === 'Critical' ? 'bg-danger-subtle text-danger' : 'bg-success-subtle text-success'}">${p.condition}</span></td>
+                <td>${new Date(p.admitted_at).toLocaleDateString()}</td>
+                <td class="text-end pe-4"><button class="btn btn-sm btn-light border">Vitals</button></td>
+            </tr>
+        `).join('');
+    }
+
+    function updateChart(data) {
+        const counts = data.reduce((acc, p) => {
+            acc[p.condition] = (acc[p.condition] || 0) + 1;
+            return acc;
+        }, {});
+
+        const chartData = {
+            labels: Object.keys(counts),
+            datasets: [{
+                label: 'Patients',
+                data: Object.values(counts),
+                backgroundColor: ['#ef4444', '#22c55e', '#3b82f6'],
+                borderRadius: 8
+            }]
+        };
+
+        if (conditionChart) {
+            conditionChart.data = chartData;
+            conditionChart.update();
+        } else {
+            const ctx = document.getElementById('conditionChart').getContext('2d');
+            conditionChart = new Chart(ctx, { type: 'bar', data: chartData, options: { responsive: true, plugins: { legend: { display: false } } } });
+        }
+    }
+
+    // Initial load and polling
+    updateDashboard();
+    setInterval(updateDashboard, 5000); // Polling every 5 seconds
 </script>
 </body>
 </html>

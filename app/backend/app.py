@@ -3,31 +3,39 @@ from flask_cors import CORS
 import psycopg2
 from psycopg2.extras import RealDictCursor
 import os
+import logging
 
 app = Flask(__name__)
-CORS(app)
+# Explicitly allow the ALB IP and Frontend Port
+CORS(app, resources={r"/api/*": {"origins": "*"}})
 
+# Configuration from Environment Variables
 DB_URL = os.environ.get('DB_URL', "postgresql://dbuser:securepass@postgres-service:5432/healthcare")
 
-def get_db():
-    return psycopg2.connect(DB_URL, cursor_factory=RealDictCursor)
-
-@app.route('/api/status')
-def status():
-    return jsonify({"status": "Online", "service": "Healthcare-Backend"})
-
-@app.route('/api/patients')
-def get_patients():
+def get_db_connection():
     try:
-        conn = get_db()
+        conn = psycopg2.connect(DB_URL, cursor_factory=RealDictCursor, connect_timeout=5)
+        return conn
+    except Exception as e:
+        logging.error(f"Database Connection Failed: {e}")
+        return None
+
+@app.route('/api/patients', methods=['GET'])
+def get_patients():
+    conn = get_db_connection()
+    if not conn:
+        return jsonify({"error": "Database unavailable"}), 503
+    
+    try:
         cur = conn.cursor()
-        cur.execute('SELECT id, name, condition, admitted_at FROM patients ORDER BY admitted_at DESC;')
+        cur.execute('SELECT id, name, condition, admitted_at FROM patients ORDER BY id DESC;')
         patients = cur.fetchall()
         cur.close()
         conn.close()
         return jsonify(patients)
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": "Query failed", "details": str(e)}), 500
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    # Listen on all interfaces for Azure ALB compatibility
+    app.run(host='0.0.0.0', port=5000, debug=False)
